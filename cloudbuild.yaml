@@ -1,0 +1,25 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'us-central1-docker.pkg.dev/lab-1-451405/my-repo/flask-app:$SHORT_SHA',
+      '.'
+    ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'us-central1-docker.pkg.dev/lab-1-451405/my-repo/flask-app:$SHORT_SHA'
+    ]
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - compute
+      - ssh
+      - pal-flask-vm
+      - --zone=us-central1-a
+      - --command
+      - |
+        sudo docker stop $(sudo docker ps -q)
+        sudo docker pull us-central1-docker.pkg.dev/lab-1-451405/my-repo/flask-app:$SHORT_SHA
+        sudo docker run -d -p 5000:5000 us-central1-docker.pkg.dev/lab-1-451405/my-repo/flask-app:$SHORT_SHA
